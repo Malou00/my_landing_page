@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Email Action Handler</title>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+    .hidden { display: none; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Processing your request...</h2>
+  <div id="message"></div>
+
+  <div id="reset-password-form" class="hidden">
+    <h3>Reset Your Password</h3>
+    <input type="password" id="new-password" placeholder="Enter new password" />
+    <button onclick="resetPassword()">Submit</button>
+  </div>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      // Add rest of config here
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    const oobCode = params.get('oobCode');
+    const continueUrl = params.get('continueUrl');
+    const lang = params.get('lang') || 'en';
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(text, type = 'info') {
+      messageDiv.innerHTML = <p class="${type}">${text}</p>;
+    }
+
+    function resetPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword) {
+        alert('Please enter a new password.');
+        return;
+      }
+
+      auth.confirmPasswordReset(oobCode, newPassword)
+        .then(() => {
+          showMessage('Password has been reset successfully.', 'success');
+        })
+        .catch(error => {
+          showMessage('Error resetting password: ' + error.message, 'error');
+        });
+    }
+
+    // Main switch for action types
+    switch (mode) {
+      case 'verifyEmail':
+        auth.applyActionCode(oobCode)
+          .then(() => {
+            showMessage('Email verified successfully!', 'success');
+          })
+          .catch(error => {
+            showMessage('Error verifying email: ' + error.message, 'error');
+          });
+        break;
+
+      case 'resetPassword':
+        // Show password reset form
+        document.getElementById('reset-password-form').classList.remove('hidden');
+        break;
+
+      case 'recoverEmail':
+        auth.checkActionCode(oobCode)
+          .then(info => {
+            return auth.applyActionCode(oobCode);
+          })
+          .then(() => {
+            showMessage('Email recovery successful.', 'success');
+          })
+          .catch(error => {
+            showMessage('Error recovering email: ' + error.message, 'error');
+          });
+        break;
+
+      case 'signIn':
+        // For email link sign-in (needs user email)
+        const email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+          showMessage('No email found for sign-in. Please sign in again.', 'error');
+          break;
+        }
+
+        auth.signInWithEmailLink(email, window.location.href)
+          .then(result => {
+            showMessage('Signed in successfully as ' + result.user.email, 'success');
+            window.localStorage.removeItem('emailForSignIn');
+          })
+          .catch(error => {
+            showMessage('Error signing in: ' + error.message, 'error');
+          });
+        break;
+
+      default:
+        showMessage('Invalid action.', 'error');
+    }
+  </script>
+</body>
+</html>
