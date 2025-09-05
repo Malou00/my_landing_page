@@ -1,116 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Email Verification & Password Reset</title>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-      text-align: center;
-    }
-    #message {
-      margin-top: 30px;
-      font-size: 1.2em;
-    }
-    .hidden { display: none; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processing your request...</title>
 </head>
 <body>
+  <h2>Processing your request...</h2>
 
-  <h1>Processing your request...</h1>
-  <p id="message">Please wait...</p>
+  <script type="module">
+    // ✅ Import Firebase from CDN
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+    import {
+      getAuth,
+      isSignInWithEmailLink,
+      signInWithEmailLink,
+      applyActionCode,
+      verifyPasswordResetCode,
+      confirmPasswordReset
+    } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
-  <!-- Password reset form -->
-  <div id="reset-password-form" class="hidden">
-    <h3>Reset Your Password</h3>
-    <input type="password" id="new-password" placeholder="Enter new password" />
-    <button onclick="resetPassword()">Submit</button>
-  </div>
-
-  <script>
-    // Firebase config (add your actual config here)
+    // 🔧 Replace with your Firebase config
     const firebaseConfig = {
-        apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
-        authDomain: "bants-6b5d9.firebaseapp.com",
-        projectId: "bants-6b5d9",
-       storageBucket: "bants-6b5d9.firebasestorage.app",
-       messagingSenderId: "719824578936",
-      appId: "1:719824578936:web:878d28649848944c0cc08d",
-       measurementId: "G-YRYHFSR0LQ"
-      // Add other required fields if needed
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
+    // 🔍 Parse URL parameters
     const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode');   // Either 'verifyEmail' or 'resetPassword'
-    const oobCode = params.get('oobCode');   // Action code from Firebase
-    const messageDiv = document.getElementById('message');
+    const mode = params.get('mode');
+    const oobCode = params.get('oobCode');
+    const continueUrl = params.get('continueUrl') || '/';
+    const lang = params.get('lang') || 'en';
 
-    console.log('Mode:', mode);
-    console.log('oobCode:', oobCode);
-
-    function showMessage(text, type = 'info') {
-      messageDiv.innerHTML = `<p class="${type}">${text}</p>`;
+    function redirectWithMessage(message) {
+      alert(message);
+      window.location.href = continueUrl;
     }
 
-    // Reset password function
-    function resetPassword() {
-      const newPassword = document.getElementById('new-password').value;
-      if (!newPassword || newPassword.length < 6) {
-        alert('Please enter a password with at least 6 characters.');
-        return;
+    async function handleAuthAction() {
+      try {
+        switch (mode) {
+          case 'verifyEmail':
+            await applyActionCode(auth, oobCode);
+            redirectWithMessage("✅ Email verified successfully!");
+            break;
+
+          case 'resetPassword': {
+            const email = await verifyPasswordResetCode(auth, oobCode);
+            const newPassword = prompt('Enter a new password for ${email}:');
+            if (!newPassword || newPassword.length < 6) {
+              alert("Password must be at least 6 characters.");
+              return;
+            }
+            await confirmPasswordReset(auth, oobCode, newPassword);
+            redirectWithMessage("✅ Password reset successful!");
+            break;
+          }
+
+          case 'recoverEmail':
+            await applyActionCode(auth, oobCode);
+            redirectWithMessage("✅ Email recovery successful.");
+            break;
+
+          case 'signIn':
+            if (isSignInWithEmailLink(auth, window.location.href)) {
+              let email = localStorage.getItem('emailForSignIn');
+              if (!email) {
+                email = prompt("Enter your email to complete sign-in:");
+              }
+              await signInWithEmailLink(auth, email, window.location.href);
+              localStorage.removeItem('emailForSignIn');
+              redirectWithMessage("✅ Signed in successfully!");
+            } else {
+              alert("Invalid sign-in link.");
+              window.location.href = '/';
+            }
+            break;
+
+          default:
+            alert("Unknown action mode.");
+            window.location.href = '/';
+        }
+      } catch (error) {
+        console.error("Error handling auth action:", error);
+        // alert(❌ ${error.message});
+        window.location.href = '/';
       }
-
-      console.log('Resetting password with oobCode:', oobCode);
-
-      auth.confirmPasswordReset(oobCode, newPassword)
-        .then(() => {
-          showMessage('✅ Password has been reset successfully.', 'success');
-        })
-        .catch(error => {
-          showMessage('❌ Error resetting password: ' + error.message, 'error');
-          console.error(error); // Log error for debugging
-        });
     }
 
-    // Main switch for actions based on mode
-    switch (mode) {
-      case 'verifyEmail':
-        if (!oobCode) {
-          showMessage('❌ Missing verification code.', 'error');
-          break;
-        }
-        console.log('Verifying email with oobCode:', oobCode);
-        auth.applyActionCode(oobCode)
-          .then(() => {
-            showMessage('✅ Email verified successfully!', 'success');
-          })
-          .catch(error => {
-            showMessage('❌ Verification failed: ' + error.message, 'error');
-            console.error(error); // Log error for debugging
-          });
-        break;
-
-      case 'resetPassword':
-        if (!oobCode) {
-          showMessage('❌ Missing password reset code.', 'error');
-          break;
-        }
-        console.log('Password reset: Showing form');
-        // Show the password reset form if we're in the resetPassword mode
-        document.getElementById('reset-password-form').classList.remove('hidden');
-        break;
-
-      default:
-        showMessage('❌ Invalid or unsupported action.', 'error');
-    }
+    handleAuthAction();
   </script>
-
 </body>
 </html>
