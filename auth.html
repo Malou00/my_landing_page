@@ -1,100 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Processing your request...</title>
+  <meta charset="UTF-8">
+  <title>Auth Action</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #9333ea);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    h2 {
+      color: #4f46e5;
+      margin-bottom: 1rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #4338ca;
+    }
+    #message {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    .success { color: #16a34a; }
+    .error { color: #dc2626; }
+  </style>
 </head>
 <body>
-  <h2>Processing your request...</h2>
+  <div class="card">
+    <h2 id="title">Loading...</h2>
+    <div id="form" style="display: none;">
+      <p id="emailInfo"></p>
+      <input type="password" id="newPassword" placeholder="Enter new password" style="display: none;" />
+      <button id="resetBtn" style="display: none;">Update Password</button>
+    </div>
+    <p id="message"></p>
+  </div>
 
   <script type="module">
-    // ✅ Import Firebase from CDN
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-    import {
-      getAuth,
-      isSignInWithEmailLink,
-      signInWithEmailLink,
-      applyActionCode,
-      verifyPasswordResetCode,
-      confirmPasswordReset
-    } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { 
+      getAuth, 
+      applyActionCode, 
+      verifyPasswordResetCode, 
+      confirmPasswordReset 
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-    // 🔧 Replace with your Firebase config
+    // 🔹 Initialize Firebase
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
+        authDomain: "bants-6b5d9.firebaseapp.com",
+        projectId: "bants-6b5d9",
+       storageBucket: "bants-6b5d9.firebasestorage.app",
+       messagingSenderId: "719824578936",
+      appId: "1:719824578936:web:878d28649848944c0cc08d",
+       measurementId: "G-YRYHFSR0LQ"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // 🔍 Parse URL parameters
+    // 🔹 Parse query params
     const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode');
-    const oobCode = params.get('oobCode');
-    const continueUrl = params.get('continueUrl') || '/';
-    const lang = params.get('lang') || 'en';
+    const mode = params.get("mode");   // verifyEmail | resetPassword
+    const oobCode = params.get("oobCode");
 
-    function redirectWithMessage(message) {
-      alert(message);
-      window.location.href = continueUrl;
-    }
+    const title = document.getElementById("title");
+    const message = document.getElementById("message");
+    const form = document.getElementById("form");
+    const emailInfo = document.getElementById("emailInfo");
+    const newPasswordInput = document.getElementById("newPassword");
+    const resetBtn = document.getElementById("resetBtn");
 
-    async function handleAuthAction() {
-      try {
-        switch (mode) {
-          case 'verifyEmail':
-            await applyActionCode(auth, oobCode);
-            redirectWithMessage("✅ Email verified successfully!");
-            break;
+    if (mode === "verifyEmail") {
+      title.innerText = "Verifying your email...";
+      applyActionCode(auth, oobCode)
+        .then(() => {
+          title.innerText = "✅ Email Verified";
+          message.innerHTML = "<span class='success'>Your email has been verified successfully!</span>";
+        })
+        .catch(err => {
+          title.innerText = "❌ Verification Failed";
+          message.innerHTML = `<span class='error'>${err.message}</span>`;
+        });
 
-          case 'resetPassword': {
-            const email = await verifyPasswordResetCode(auth, oobCode);
-            const newPassword = prompt('Enter a new password for ${email}:');
-            if (!newPassword || newPassword.length < 6) {
-              alert("Password must be at least 6 characters.");
-              return;
+    } else if (mode === "resetPassword") {
+      title.innerText = "Reset Your Password";
+      verifyPasswordResetCode(auth, oobCode)
+        .then(email => {
+          form.style.display = "block";
+          emailInfo.innerText = `Resetting password for: ${email}`;
+          newPasswordInput.style.display = "block";
+          resetBtn.style.display = "block";
+
+          resetBtn.onclick = async () => {
+            const newPassword = newPasswordInput.value;
+            try {
+              await confirmPasswordReset(auth, oobCode, newPassword);
+              message.innerHTML = "<span class='success'>✅ Password updated successfully!</span>";
+              form.style.display = "none";
+            } catch (err) {
+              message.innerHTML = `<span class='error'>❌ ${err.message}</span>`;
             }
-            await confirmPasswordReset(auth, oobCode, newPassword);
-            redirectWithMessage("✅ Password reset successful!");
-            break;
-          }
+          };
+        })
+        .catch(() => {
+          title.innerText = "❌ Invalid Link";
+          message.innerHTML = "<span class='error'>This password reset link is invalid or expired.</span>";
+        });
 
-          case 'recoverEmail':
-            await applyActionCode(auth, oobCode);
-            redirectWithMessage("✅ Email recovery successful.");
-            break;
-
-          case 'signIn':
-            if (isSignInWithEmailLink(auth, window.location.href)) {
-              let email = localStorage.getItem('emailForSignIn');
-              if (!email) {
-                email = prompt("Enter your email to complete sign-in:");
-              }
-              await signInWithEmailLink(auth, email, window.location.href);
-              localStorage.removeItem('emailForSignIn');
-              redirectWithMessage("✅ Signed in successfully!");
-            } else {
-              alert("Invalid sign-in link.");
-              window.location.href = '/';
-            }
-            break;
-
-          default:
-            alert("Unknown action mode.");
-            window.location.href = '/';
-        }
-      } catch (error) {
-        console.error("Error handling auth action:", error);
-        // alert(❌ ${error.message});
-        window.location.href = '/';
-      }
+    } else {
+      title.innerText = "⚠️ Invalid Action";
+      message.innerHTML = "<span class='error'>Unsupported authentication mode.</span>";
     }
-
-    handleAuthAction();
   </script>
 </body>
 </html>
