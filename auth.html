@@ -25,7 +25,7 @@
       text-align: center;
     }
     .logo {
-      max-width: 120px;
+      max-width: 150px;
       margin-bottom: 1rem;
     }
     h2 {
@@ -61,12 +61,20 @@
     }
     .success { color: #16a34a; }
     .error { color: #dc2626; }
+    .back-btn {
+      margin-top: 1.5rem;
+      background: #000;
+      color: #fff;
+    }
+    .back-btn:hover {
+      background: #333;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <!-- 🔹 Your Logo -->
-    <img src="logo.png" alt="App Logo" class="logo" />
+    <!-- 🔹 Your Logo (with black bg + white text) -->
+    <img src="/images/logo.png" alt="App Logo" class="logo" />
 
     <h2 id="title">Loading...</h2>
     <div id="form" style="display: none;">
@@ -75,6 +83,9 @@
       <button id="resetBtn" style="display: none;">Update Password</button>
     </div>
     <p id="message"></p>
+
+    <!-- 🔹 Back to Login Button -->
+    <button class="back-btn" onclick="window.location.href='/login'">Back to Login</button>
   </div>
 
   <script type="module">
@@ -97,7 +108,6 @@
        measurementId: "G-YRYHFSR0LQ"
       // Add other required fields if needed
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
