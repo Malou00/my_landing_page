@@ -6,10 +6,11 @@
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
   <style>
-    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
     .hidden { display: none; }
     .success { color: green; }
     .error { color: red; }
+    .info { color: #333; }
   </style>
 </head>
 <body>
@@ -23,9 +24,8 @@
   </div>
 
   <script>
-    // Your Firebase config
+    // ✅ Your Firebase configuration (Replace with your actual config)
     const firebaseConfig = {
-     
         apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
         authDomain: "bants-6b5d9.firebaseapp.com",
         projectId: "bants-6b5d9",
@@ -33,88 +33,57 @@
        messagingSenderId: "719824578936",
       appId: "1:719824578936:web:878d28649848944c0cc08d",
        measurementId: "G-YRYHFSR0LQ"
+      // Add other required fields if needed
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    // ✅ Get URL parameters
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
     const oobCode = params.get('oobCode');
-    const continueUrl = params.get('continueUrl');
-    const lang = params.get('lang') || 'en';
     const messageDiv = document.getElementById('message');
 
+    // ✅ Helper to show messages
     function showMessage(text, type = 'info') {
-      messageDiv.innerHTML = <p class="${type}">${text}</p>;
+      messageDiv.innerHTML = `<p class="${type}">${text}</p>`;
     }
 
+    // ✅ Reset password handler
     function resetPassword() {
       const newPassword = document.getElementById('new-password').value;
-      if (!newPassword) {
-        alert('Please enter a new password.');
+      if (!newPassword || newPassword.length < 6) {
+        alert('Please enter a password with at least 6 characters.');
         return;
       }
 
       auth.confirmPasswordReset(oobCode, newPassword)
         .then(() => {
-          showMessage('Password has been reset successfully.', 'success');
+          showMessage('✅ Password has been reset successfully.', 'success');
         })
         .catch(error => {
-          showMessage('Error resetting password: ' + error.message, 'error');
+          showMessage('❌ Error resetting password: ' + error.message, 'error');
         });
     }
 
-    // Main switch for action types
+    // ✅ Main handler for modes
     switch (mode) {
       case 'verifyEmail':
         auth.applyActionCode(oobCode)
           .then(() => {
-            showMessage('Email verified successfully!', 'success');
+            showMessage('✅ Email verified successfully!', 'success');
           })
           .catch(error => {
-            showMessage('Error verifying email: ' + error.message, 'error');
+            showMessage('❌ Error verifying email: ' + error.message, 'error');
           });
         break;
 
       case 'resetPassword':
-        // Show password reset form
         document.getElementById('reset-password-form').classList.remove('hidden');
         break;
 
-      case 'recoverEmail':
-        auth.checkActionCode(oobCode)
-          .then(info => {
-            return auth.applyActionCode(oobCode);
-          })
-          .then(() => {
-            showMessage('Email recovery successful.', 'success');
-          })
-          .catch(error => {
-            showMessage('Error recovering email: ' + error.message, 'error');
-          });
-        break;
-
-      case 'signIn':
-        // For email link sign-in (needs user email)
-        const email = window.localStorage.getItem('emailForSignIn');
-        if (!email) {
-          showMessage('No email found for sign-in. Please sign in again.', 'error');
-          break;
-        }
-
-        auth.signInWithEmailLink(email, window.location.href)
-          .then(result => {
-            showMessage('Signed in successfully as ' + result.user.email, 'success');
-            window.localStorage.removeItem('emailForSignIn');
-          })
-          .catch(error => {
-            showMessage('Error signing in: ' + error.message, 'error');
-          });
-        break;
-
       default:
-        showMessage('Invalid action.', 'error');
+        showMessage('❌ Invalid or unsupported action.', 'error');
     }
   </script>
 </body>
