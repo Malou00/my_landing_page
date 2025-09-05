@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Verification & Password Reset</title>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    #message {
+      margin-top: 30px;
+      font-size: 1.2em;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>Processing your request...</h1>
+  <p id="message">Please wait...</p>
+
+  <!-- Password reset form -->
+  <div id="reset-password-form" class="hidden">
+    <h3>Reset Your Password</h3>
+    <input type="password" id="new-password" placeholder="Enter new password" />
+    <button onclick="resetPassword()">Submit</button>
+  </div>
+
+  <script>
+    // Firebase config (add your actual config here)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
+        authDomain: "bants-6b5d9.firebaseapp.com",
+        projectId: "bants-6b5d9",
+       storageBucket: "bants-6b5d9.firebasestorage.app",
+       messagingSenderId: "719824578936",
+      appId: "1:719824578936:web:878d28649848944c0cc08d",
+       measurementId: "G-YRYHFSR0LQ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');   // Either 'verifyEmail' or 'resetPassword'
+    const oobCode = params.get('oobCode');   // Action code from Firebase
+    const messageDiv = document.getElementById('message');
+
+    function showMessage(text, type = 'info') {
+      messageDiv.innerHTML = `<p class="${type}">${text}</p>`;
+    }
+
+    // Reset password function
+    function resetPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword || newPassword.length < 6) {
+        alert('Please enter a password with at least 6 characters.');
+        return;
+      }
+
+      auth.confirmPasswordReset(oobCode, newPassword)
+        .then(() => {
+          showMessage('✅ Password has been reset successfully.', 'success');
+        })
+        .catch(error => {
+          showMessage('❌ Error resetting password: ' + error.message, 'error');
+        });
+    }
+
+    // Main switch for actions based on mode
+    switch (mode) {
+      case 'verifyEmail':
+        if (!oobCode) {
+          showMessage('❌ Missing verification code.', 'error');
+          break;
+        }
+        auth.applyActionCode(oobCode)
+          .then(() => {
+            showMessage('✅ Email verified successfully!', 'success');
+          })
+          .catch(error => {
+            showMessage('❌ Verification failed: ' + error.message, 'error');
+          });
+        break;
+
+      case 'resetPassword':
+        if (!oobCode) {
+          showMessage('❌ Missing password reset code.', 'error');
+          break;
+        }
+        // Show the password reset form if we're in the resetPassword mode
+        document.getElementById('reset-password-form').classList.remove('hidden');
+        break;
+
+      default:
+        showMessage('❌ Invalid or unsupported action.', 'error');
+    }
+  </script>
+
+</body>
+</html>
