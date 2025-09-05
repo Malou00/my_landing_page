@@ -24,6 +24,10 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       text-align: center;
     }
+    .logo {
+      max-width: 120px;
+      margin-bottom: 1rem;
+    }
     h2 {
       color: #4f46e5;
       margin-bottom: 1rem;
@@ -61,6 +65,9 @@
 </head>
 <body>
   <div class="card">
+    <!-- 🔹 Your Logo -->
+    <img src="logo.png" alt="App Logo" class="logo" />
+
     <h2 id="title">Loading...</h2>
     <div id="form" style="display: none;">
       <p id="emailInfo"></p>
@@ -88,7 +95,9 @@
        messagingSenderId: "719824578936",
       appId: "1:719824578936:web:878d28649848944c0cc08d",
        measurementId: "G-YRYHFSR0LQ"
+      // Add other required fields if needed
     };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
