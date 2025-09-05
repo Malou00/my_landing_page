@@ -40,6 +40,7 @@
        messagingSenderId: "719824578936",
       appId: "1:719824578936:web:878d28649848944c0cc08d",
        measurementId: "G-YRYHFSR0LQ"
+      // Add other required fields if needed
     };
 
     // Initialize Firebase
@@ -50,6 +51,9 @@
     const mode = params.get('mode');   // Either 'verifyEmail' or 'resetPassword'
     const oobCode = params.get('oobCode');   // Action code from Firebase
     const messageDiv = document.getElementById('message');
+
+    console.log('Mode:', mode);
+    console.log('oobCode:', oobCode);
 
     function showMessage(text, type = 'info') {
       messageDiv.innerHTML = `<p class="${type}">${text}</p>`;
@@ -63,12 +67,15 @@
         return;
       }
 
+      console.log('Resetting password with oobCode:', oobCode);
+
       auth.confirmPasswordReset(oobCode, newPassword)
         .then(() => {
           showMessage('✅ Password has been reset successfully.', 'success');
         })
         .catch(error => {
           showMessage('❌ Error resetting password: ' + error.message, 'error');
+          console.error(error); // Log error for debugging
         });
     }
 
@@ -79,12 +86,14 @@
           showMessage('❌ Missing verification code.', 'error');
           break;
         }
+        console.log('Verifying email with oobCode:', oobCode);
         auth.applyActionCode(oobCode)
           .then(() => {
             showMessage('✅ Email verified successfully!', 'success');
           })
           .catch(error => {
             showMessage('❌ Verification failed: ' + error.message, 'error');
+            console.error(error); // Log error for debugging
           });
         break;
 
@@ -93,6 +102,7 @@
           showMessage('❌ Missing password reset code.', 'error');
           break;
         }
+        console.log('Password reset: Showing form');
         // Show the password reset form if we're in the resetPassword mode
         document.getElementById('reset-password-form').classList.remove('hidden');
         break;
