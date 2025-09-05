@@ -62,19 +62,11 @@
     }
     .success { color: #16a34a; }
     .error { color: #dc2626; }
-    .back-btn {
-      margin-top: 1.5rem;
-      background: #000;
-      color: #fff;
-    }
-    .back-btn:hover {
-      background: #333;
-    }
   </style>
 </head>
 <body>
   <div class="card">
-    <!-- 🔹 Your Logo (with black bg + white text) -->
+    <!-- 🔹 Your Logo -->
     <img src="logo.png" alt="App Logo" class="logo" />
 
     <h2 id="title">Loading...</h2>
@@ -84,8 +76,6 @@
       <button id="resetBtn" style="display: none;">Update Password</button>
     </div>
     <p id="message"></p>
-
-    <!-- 🔹 Back to Login Button -->
   </div>
 
   <script type="module">
@@ -99,14 +89,8 @@
 
     // 🔹 Initialize Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
-        authDomain: "bants-6b5d9.firebaseapp.com",
-        projectId: "bants-6b5d9",
-       storageBucket: "bants-6b5d9.firebasestorage.app",
-       messagingSenderId: "719824578936",
-      appId: "1:719824578936:web:878d28649848944c0cc08d",
-       measurementId: "G-YRYHFSR0LQ"
-      // Add other required fields if needed
+      apiKey: "AIzaSyDSByG-hmcsw1TIBqitT0V3h0ZW7CJW-wg",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com"
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -128,7 +112,10 @@
       applyActionCode(auth, oobCode)
         .then(() => {
           title.innerText = "✅ Email Verified";
-          message.innerHTML = "<span class='success'>Your email has been verified successfully!</span>";
+          message.innerHTML = "<span class='success'>Your email has been verified successfully! Redirecting...</span>";
+          setTimeout(() => {
+            window.location.href = "/index.html"; // redirect to homepage
+          }, 2000);
         })
         .catch(err => {
           title.innerText = "❌ Verification Failed";
@@ -140,7 +127,7 @@
       verifyPasswordResetCode(auth, oobCode)
         .then(email => {
           form.style.display = "block";
-          emailInfo.innerText = `Resetting password for: ${email}`;
+          emailInfo.innerText = `You are resetting your password for BantsApp`;
           newPasswordInput.style.display = "block";
           resetBtn.style.display = "block";
 
@@ -148,8 +135,11 @@
             const newPassword = newPasswordInput.value;
             try {
               await confirmPasswordReset(auth, oobCode, newPassword);
-              message.innerHTML = "<span class='success'>✅ Password updated successfully!</span>";
+              message.innerHTML = "<span class='success'>✅ Password updated successfully! Redirecting...</span>";
               form.style.display = "none";
+              setTimeout(() => {
+                window.location.href = "/index.html"; // redirect to homepage
+              }, 2000);
             } catch (err) {
               message.innerHTML = `<span class='error'>❌ ${err.message}</span>`;
             }
