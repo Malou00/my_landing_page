@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MemeWave</title>
+  <link rel="icon" href="logo.png" type="image/x-icon">
+  <title>BantsApp</title>
   <link rel="icon" href="logo.png" type="image/png">
 
   <!-- Meta Tags for SEO and Social Sharing -->
@@ -77,6 +78,13 @@
       text-align: center;
     }
 
+    .download-btn.disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+     
     footer {
       text-align: center;
       font-size: 0.85em;
@@ -95,6 +103,13 @@
   </style>
 </head>
 <body>
+    <script>
+        document.getElementById("downloadBtn").addEventListener("click", function(event) {
+          event.preventDefault(); // stop any default link behavior
+          alert("🚧 The app is coming soon! The APK will be available shortly.");
+        });
+      </script>
+      
 
   <header>
     <img src="logo.png" alt="App Icon">
@@ -112,7 +127,7 @@
     </div>
 
     <h2>Download Now</h2>
-    <a class="download-btn" href="downloads/memewave.apk" download>📥 Download APK</a>
+    <a class="download-btn disabled" id="downloadBtn" href="#">📥 Coming Soon</a>
     <p class="note">Version 1.0 • 8.4 MB • Android only</p>
     <p class="note">You may need to allow installs from unknown sources in your device settings.</p>
 
